@@ -1,11 +1,11 @@
 --
 -- This SQL query calculates the total number of calls and Minutes of Use (MOU) per domain for a specific date range.
--- The query aggregates data from the DISH_MNO_DL.INTERCONNECT_5G.RAW_INTERCONNECT_CDR_PARSE_HIST table, focusing on INVITE and BYE messages.
 -- The results are grouped by month and domain, providing insights into call activity and usage patterns.
 -- Based on the CDRs contents, INVITE records are used to identify the Domain while BYE CDRs are used to determine the duration of calls.
 -- INVITE and BYE messages can be joined on the SESSION_ID to match calls.
 -- The query is designed to be run in a SQL environment that supports the Snowflake functions and syntax.
 --
+-- We will use AT&T as an example of a domain, but it can be replaced with any other domain as needed
 
 WITH 
 INVITES AS (
@@ -21,7 +21,7 @@ INVITES AS (
     WHERE 
         SERVICE_INFORMATION_EVENT_TYPE_METHOD = 'INVITE'
         AND ACCOUNTING_RECORD_NUMBER = '0'  -- Only consider the first record; initiate INVITE, in the call sequence
-        AND NOKIA_SPECIFIC_EXTENSION_OUTGOING_VN_TG_NAME LIKE 'Partner%'  -- Filter for specific trunk group names starting with 'Partner'
+        AND NOKIA_SPECIFIC_EXTENSION_OUTGOING_VN_TG_NAME LIKE 'ATT%'  -- Filter for specific trunk group names starting with 'Partner'
         
         -- Ensure the event timestamp is within the specified date range. :daterange can be replaced with a specific date range
         AND TIMESTAMPADD('hour', 0, TO_TIMESTAMP(EVENT_TIMESTAMP, 'YYYY-MM-DD"T"HH24:MI:SS"+0000"')) >= TO_TIMESTAMP('2025-06-01 00:00:00')  -- Start date
@@ -35,7 +35,7 @@ BYES AS (
     FROM DISH_MNO_DL.INTERCONNECT_5G.RAW_INTERCONNECT_CDR_PARSE_HIST
     WHERE 
         SERVICE_INFORMATION_EVENT_TYPE_METHOD = 'BYE'   -- Consider BYE messages (scuccessful call termination)
-        AND NOKIA_SPECIFIC_EXTENSION_OUTGOING_VN_TG_NAME LIKE 'Partner%'
+        AND NOKIA_SPECIFIC_EXTENSION_OUTGOING_VN_TG_NAME LIKE 'ATT%'
         AND TIMESTAMPADD('hour', 0, TO_TIMESTAMP(EVENT_TIMESTAMP, 'YYYY-MM-DD"T"HH24:MI:SS"+0000"')) >= TO_TIMESTAMP('2025-06-01 00:00:00')
         AND TIMESTAMPADD('hour', 0, TO_TIMESTAMP(EVENT_TIMESTAMP, 'YYYY-MM-DD"T"HH24:MI:SS"+0000"')) < TO_TIMESTAMP('2025-07-01 00:00:00')
 )
